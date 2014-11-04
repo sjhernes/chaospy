@@ -2,6 +2,7 @@ import numpy as np
 import fraction as f
 import operator
 from collections import defaultdict
+from functools import partial
 pysum = sum
 
 __all__ = [
@@ -548,7 +549,7 @@ dtype : type
         #         K = tuple(np.array(I)+np.array(J))
         #         d[K] = d.get(K,0) + y.A[I]*self.A[J]
 
-        d = defaultdict(float)
+        d = defaultdict(partial(np.ndarray, shape)) # partial is faster then lambda
         yAref = y.A
         sAref = self.A
         opadd = operator.add
