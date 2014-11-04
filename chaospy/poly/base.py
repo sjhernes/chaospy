@@ -515,7 +515,6 @@ dtype : type
     def __mul__(self, y):
         """x.__mul__(y) <==> x*y"""
 
-
         if not isinstance(y, Poly):
             y = Poly(y)
 
@@ -529,30 +528,16 @@ dtype : type
 
         dtype = dtyping(self.dtype, y.dtype)
         if self.dtype!=y.dtype:
-
-            # if self.dtype==dtype:
-            #     if dtype==f.frac:
-            #         y = asfrac(y)
-            #     else:
-            #         y = asfloat(y)
-
-            # else:
-            #     if dtype==f.frac:
-            #         self = asfrac(self)
-            #     else:
             self = asfloat(self)
 
-        # d = {}
-        # for I in y.A:
-        #     for J in self.A:
-
-        #         K = tuple(np.array(I)+np.array(J))
-        #         d[K] = d.get(K,0) + y.A[I]*self.A[J]
-
-        d = defaultdict(partial(np.ndarray, shape)) # partial is faster then lambda
+        # Direct refferences is faster at least in loops like this
+        opadd = operator.add
         yAref = y.A
         sAref = self.A
-        opadd = operator.add
+
+        # defaultdict enables us to use += and removes a get with default 0
+        d = defaultdict(partial(np.ndarray, shape)) # partial is faster then lambda
+
         for I in yAref:
             for J in sAref:
                 d[tuple(map(opadd, I, J))] += yAref[I]*sAref[J]
