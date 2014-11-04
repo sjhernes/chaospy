@@ -298,7 +298,6 @@ poly.call : equivalent method
 
         return Poly(A1, dim, shape, self.dtype)
 
-
     def __init__(self, A=None, dim=None, shape=None,
         dtype=None, V=0):
         """
@@ -356,16 +355,17 @@ dtype : type
                 dim_ = len(key)
                 dtype_ = dtyping(A[key])
 
-        elif isinstance(A, f.frac):
+        # elif isinstance(A, f.frac):
 
-            dtype_ = f.frac
-            shape_ = A.shape
-            dim_ = 1
-            if isinstance(A.a, int):
-                A = f.frac(np.array(A.a), np.array(A.b))
-            A = {(0,): A}
+        #     dtype_ = f.frac
+        #     shape_ = A.shape
+        #     dim_ = 1
+        #     if isinstance(A.a, int):
+        #         A = f.frac(np.array(A.a), np.array(A.b))
+        #     A = {(0,): A}
 
         elif isinstance(A, (np.ndarray, list, tuple)):
+            print "lol"
 
             A = [Poly(a) for a in A]
             shape_ = (len(A),) + A[0].shape
@@ -390,7 +390,7 @@ dtype : type
                         else:
                             d[key] = np.zeros(shape_, dtype=dtype_)
                     d[key][i] = A[i].A[key]
-                    if V: print "update", key, d[key]
+                    # if V: print "update", key, d[key] # if-test in a double loop
             if V: print "creating master dict:\n", d
 
             A = d
@@ -401,53 +401,97 @@ dtype : type
 
         if dtype is None:
             dtype = dtype_
-        if dtype==int:
 
-            func1 = asint
-            if shape is None:
-                shape = shape_
-            elif np.any(np.array(shape)!=shape_):
-                ones = np.ones(shape, dtype=int)
-                func1 = lambda x: asint(x*ones)
+        # seems like this is the only thing that happens moving it for speed
+        # if dtype==int:
 
-        elif dtype==f.frac:
+        #     func1 = asint
+        #     if shape is None:
+        #         shape = shape_
+        #     # np.any is expensive 
+        #     elif np.any(np.array(shape)!=shape_):
+        #     # else: # TODO: test if failing and correct Will fail any
+        #         ones = np.ones(shape, dtype=int)
+        #         func1 = lambda x: asint(x*ones)
 
-            func1 = f.frac
-            if shape is None:
-                shape = shape_
-            elif np.any(np.array(shape)!=shape_):
-                ones = np.ones(shape, dtype=int)
-                func1 = lambda x: f.frac(x*ones)
+        # elif dtype==f.frac:
 
-        else:
+        #     func1 = f.frac
+        #     if shape is None:
+        #         shape = shape_
+        #     elif np.any(np.array(shape)!=shape_):
+        #         ones = np.ones(shape, dtype=int)
+        #         func1 = lambda x: f.frac(x*ones)
 
-            func1 = lambda x:np.array(x, dtype=dtype)
-            if shape is None:
-                shape = shape_
-            elif np.any(np.array(shape)!=shape_):
-                ones = np.ones(shape, dtype=int)
-                func1 = lambda x: 1.*x*ones
+        # else:
 
-        func2 = lambda x:x
-        if dim is None:
-            dim = dim_
-        elif dim<dim_:
-            func2 = lambda x:x[:dim]
-        elif dim>dim_:
-            func2 = lambda x:x + (0,)*(dim-dim_)
+        #     func1 = lambda x:np.array(x, dtype=dtype)
+        #     if shape is None:
+        #         shape = shape_
+        #     elif np.any(np.array(shape)!=shape_):
+        #         ones = np.ones(shape, dtype=int)
+        #         func1 = lambda x: 1.*x*ones
 
         d = {}
-        for key, val in A.items():
-            d[func2(key)] = func1(val)
+        if dim is None:
+            dim = dim_
+
+            if shape is None:
+                shape = shape_
+                    # np.any is expensive 
+            if np.any(np.array(shape)!=shape_):
+                ones = np.ones(shape, dtype=int)
+                for key, val in A.items():
+                    d[key] = asint(val*ones)
+            else:
+                for key, val in A.items():
+                    d[key] = asint(val)
+
+        elif dim<dim_:
+            if shape is None:
+                shape = shape_
+                    # np.any is expensive 
+            if np.any(np.array(shape)!=shape_):
+                ones = np.ones(shape, dtype=int)
+                for key, val in A.items():
+                    d[key[:dim]] = asint(val*ones)
+            else: # TODO: test if failing and correct Will fail any
+                for key, val in A.items():
+                    d[key[:dim]] = asint(val)
+
+        elif dim>dim_: 
+            if shape is None:
+                shape = shape_
+                    # np.any is expensive 
+            if np.any(np.array(shape)!=shape_):
+                ones = np.ones(shape, dtype=int)
+                for key, val in A.items():
+                    d[key + (0,)*(dim-dim_)] = asint(val*ones)
+            else:
+                for key, val in A.items():
+                    d[key + (0,)*(dim-dim_)] = asint(val)
+        else:
+            if shape is None:
+                shape = shape_
+                    # np.any is expensive 
+            if np.any(np.array(shape)!=shape_):
+                ones = np.ones(shape, dtype=int)
+                for key, val in A.items():
+                    d[key] = asint(val*ones)
+            else:
+                for key, val in A.items():
+                    d[key] = asint(val)
         A = d
 
         if isinstance(shape, int):
             shape = (shape,)
 
         # Remove empty elements
-        for key in A.keys()[:]:
-            if np.all(A[key]==0):
-                del A[key]
+
+        # damn the memory, this takes 33% of the function
+        # for key in A.keys()[:]:
+        #     if np.all(A[key]==0):
+        #         del A[key]
 
         # assert non-empty container
         if not A:
