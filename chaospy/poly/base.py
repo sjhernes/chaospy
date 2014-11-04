@@ -1,5 +1,7 @@
 import numpy as np
 import fraction as f
+import operator
+from collections import defaultdict
 pysum = sum
 
 __all__ = [
@@ -527,27 +529,36 @@ dtype : type
         dtype = dtyping(self.dtype, y.dtype)
         if self.dtype!=y.dtype:
 
-            if self.dtype==dtype:
-                if dtype==f.frac:
-                    y = asfrac(y)
-                else:
-                    y = asfloat(y)
+            # if self.dtype==dtype:
+            #     if dtype==f.frac:
+            #         y = asfrac(y)
+            #     else:
+            #         y = asfloat(y)
 
-            else:
-                if dtype==f.frac:
-                    self = asfrac(self)
-                else:
-                    self = asfloat(self)
+            # else:
+            #     if dtype==f.frac:
+            #         self = asfrac(self)
+            #     else:
+            self = asfloat(self)
 
-        d = {}
-        for I in y.A:
-            for J in self.A:
+        # d = {}
+        # for I in y.A:
+        #     for J in self.A:
 
-                K = tuple(np.array(I)+np.array(J))
-                d[K] = d.get(K,0) + y.A[I]*self.A[J]
+        #         K = tuple(np.array(I)+np.array(J))
+        #         d[K] = d.get(K,0) + y.A[I]*self.A[J]
 
+        d = defaultdict(float)
+        yAref = y.A
+        sAref = self.A
+        opadd = operator.add
+        for I in yAref:
+            for J in sAref:
+                d[tuple(map(opadd, I, J))] += yAref[I]*sAref[J]
+
+        npall = np.all
         for K in d.keys():
-            if np.all(d[K]==0):
+            if npall(d[K]==0):
                 del d[K]
 
         out = Poly(d, self.dim, shape, dtype)
