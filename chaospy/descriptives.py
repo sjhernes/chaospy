@@ -459,10 +459,10 @@ Examples
     mom = m2-np.outer(m1, m1)
 
     out = np.zeros((len(poly), len(poly)))
-    for i in xrange(len(keys)):
+    for i in xrange(N):
         a = A[keys[i]]
         out += np.outer(a,a)*mom[i,i]
-        for j in xrange(i+1, len(keys)):
+        for j in xrange(i+1, N):
             b = A[keys[j]]
             ab = np.outer(a,b)
             out += (ab+ab.T)*mom[i,j]
