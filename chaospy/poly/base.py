@@ -432,8 +432,9 @@ dtype : type
         #         func1 = lambda x: 1.*x*ones
 
         # if this happens we have to remodel this function
-        if dtype not in (int, long):
-            print "Warning: dtype in init is not int or long"
+        # if dtype not in (int, long):
+        #     print dtype
+        #     print "Warning: dtype in init is not int or long"
 
         d = {}
         if dim is None:
@@ -588,22 +589,17 @@ dtype : type
         sAref = self.A
 
         # defaultdict enables us to use += and removes a get with default 0
-        d = defaultdict(partial(np.ndarray, shape)) # partial is faster then lambda
-
+        # d = defaultdict(partial(np.ndarray, shape)) # partial is faster then lambda
+        d = {}
         for I in yAref:
             for J in sAref:
                 # removed converting to np-array
                 # K = tuple(np.array(I)+np.array(J))
                 # to
-                # K = tuple(map(opadd, I, J))
+                K = tuple(map(opadd, I, J))
 
-                # Changed to defaultdict to use +=, sped up things by quite a lot
-                # d[K] = d.get(K,0) + y.A[I]*self.A[J]
-                # to
-                # d[K] += yAref[I]*sAref[J]
+                d[K] = d.get(K, 0) + (yAref[I]*sAref[J])
 
-                # combined:
-                d[tuple(map(opadd, I, J))] += yAref[I]*sAref[J]
 
         npall = np.all
         for K in d.keys():
