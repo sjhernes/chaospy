@@ -365,7 +365,6 @@ dtype : type
         #     A = {(0,): A}
 
         elif isinstance(A, (np.ndarray, list, tuple)):
-            print "lol"
 
             A = [Poly(a) for a in A]
             shape_ = (len(A),) + A[0].shape
@@ -489,9 +488,9 @@ dtype : type
         # Remove empty elements
 
         # damn the memory, this takes 33% of the function
-        # for key in A.keys()[:]:
-        #     if np.all(A[key]==0):
-        #         del A[key]
+        for key in A.keys()[:]:
+            if np.all(A[key]==0):
+                del A[key]
 
         # assert non-empty container
         if not A:
@@ -584,6 +583,17 @@ dtype : type
 
         for I in yAref:
             for J in sAref:
+                # removed converting to np-array
+                # K = tuple(np.array(I)+np.array(J))
+                # to
+                # K = tuple(map(opadd, I, J))
+
+                # Changed to defaultdict to use +=, sped up things by quite a lot
+                # d[K] = d.get(K,0) + y.A[I]*self.A[J]
+                # to
+                # d[K] += yAref[I]*sAref[J]
+
+                # combined:
                 d[tuple(map(opadd, I, J))] += yAref[I]*sAref[J]
 
         npall = np.all
