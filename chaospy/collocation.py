@@ -679,16 +679,24 @@ cross : bool
 
         gamma = 0.1
 
+        # moving out stuff we dont need to compute every time
+        dotATA = np.dot(A.T,A)
+        dotLTL = np.dot(L.T,L)
+        eyem   = np.eye(m)
+
+        # TODO fix en ny dot-funksjon og se om man kan eliminere
+        # ting (denne delfunksjonen er nesten alt av regression-test)
         def rgcv_error(alpha):
-            A_ = np.dot(A.T,A)+alpha*(np.dot(L.T,L))
-            try:
-                A_ = np.dot(la.inv(A_), A.T)
+            #A_ = np.dot(A.T,A)+alpha*(np.dot(L.T,L))
+            try: 
+                A_ = np.dot(la.inv(dotATA+alpha*dotLTL), A.T)
+                #A_ = np.dot(la.inv(A_), A.T)
             except la.LinAlgError:
                 return np.inf
             x = np.dot(A_, b)
             res2 = np.sum((np.dot(A,x)-b)**2)
             K = np.dot(A, A_)
-            V = m*res2/np.trace(np.eye(m)-K)**2
+            V = m*res2/np.trace(eyem-K)**2
             mu2 = np.trace(np.dot(K,K))/m
 
             return (gamma + (1-gamma)*mu2)*V

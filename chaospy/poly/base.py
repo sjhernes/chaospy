@@ -591,14 +591,16 @@ dtype : type
         # defaultdict enables us to use += and removes a get with default 0
         # d = defaultdict(partial(np.ndarray, shape)) # partial is faster then lambda
         d = {}
+        dGet = d.get
         for I in yAref:
             for J in sAref:
                 # removed converting to np-array
                 # K = tuple(np.array(I)+np.array(J))
                 # to
                 K = tuple(map(opadd, I, J))
-
-                d[K] = d.get(K, 0) + (yAref[I]*sAref[J])
+                
+                d[K] = dGet(K, 0) + yAref[I]*sAref[J]
+                #d[tuple(map(opadd, I, J))] = d.get(K, 0) + (yAref[I]*sAref[J])
 
 
         npall = np.all
